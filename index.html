@@ -952,11 +952,13 @@
                 elVideo.requestFullscreen();
             } else if (elVideo.webkitRequestFullscreen) { /* Safari */
                 elVideo.webkitRequestFullscreen();
+            } else if (elVideo.webkitEnterFullscreen) { /* iPhone Safari */
+                elVideo.webkitEnterFullscreen();
             } else if (elVideo.msRequestFullscreen) { /* IE11 */
                 elVideo.msRequestFullscreen();
             }
 
-            elVideo.play();
+            elVideo.play().catch(e => console.error("Video play failed:", e));
         });
 
         // Skip/Close Intro
@@ -966,7 +968,7 @@
             switchScreen(sIntro, sApp);
 
             // If we are starting from the beginning, load idx 0
-            if (currentIndex === 0 && !elImage.src) {
+            if (currentIndex === 0 && !elImage.getAttribute('src')) {
                 loadItemAtCursor(0);
             }
         };
@@ -979,10 +981,12 @@
         document.addEventListener('webkitfullscreenchange', handleFullscreenExit);
         document.addEventListener('mozfullscreenchange', handleFullscreenExit);
         document.addEventListener('MSFullscreenChange', handleFullscreenExit);
+        elVideo.addEventListener('webkitendfullscreen', handleFullscreenExit); // iPhone Safari
 
         function handleFullscreenExit() {
-            if (!document.fullscreenElement && !document.webkitFullscreenElement
-                && !document.mozFullScreenElement && !document.msFullscreenElement) {
+            const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement || elVideo.webkitDisplayingFullscreen;
+
+            if (!isFullscreen) {
                 // Determine if we're in the intro screen or app screen
                 if (!sIntro.classList.contains('hidden')) {
                     // Exited fullscreen while watching the primary intro flow
@@ -1004,11 +1008,13 @@
                 elVideo.requestFullscreen();
             } else if (elVideo.webkitRequestFullscreen) {
                 elVideo.webkitRequestFullscreen();
+            } else if (elVideo.webkitEnterFullscreen) {
+                elVideo.webkitEnterFullscreen();
             } else if (elVideo.msRequestFullscreen) {
                 elVideo.msRequestFullscreen();
             }
 
-            elVideo.play();
+            elVideo.play().catch(e => console.error("Video play failed:", e));
         });
 
         // --- Lightbox Logic ---
