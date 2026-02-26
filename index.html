@@ -558,7 +558,7 @@
             <h2>Let's set the stage</h2>
 
             <div id="intro-video-container">
-                <video id="intro-video" src="intro_video/intro.mp4" playsinline controls loop muted
+                <video id="intro-video" type="video/mp4" src="intro_video/intro.mp4" playsinline controls loop muted
                     preload="auto"></video>
             </div>
 
@@ -949,17 +949,25 @@
             btnSkipIntro.classList.add('hidden');
             btnCloseIntro.classList.remove('hidden');
 
-            if (elVideo.requestFullscreen) {
-                elVideo.requestFullscreen();
-            } else if (elVideo.webkitRequestFullscreen) { /* Safari */
-                elVideo.webkitRequestFullscreen();
-            } else if (elVideo.webkitEnterFullscreen) { /* iPhone Safari */
-                elVideo.webkitEnterFullscreen();
-            } else if (elVideo.msRequestFullscreen) { /* IE11 */
-                elVideo.msRequestFullscreen();
+            // Safari requires play() to be called immediately upon user gesture
+            if (elVideo.paused) {
+                elVideo.play().catch(e => console.error("Initial play failed:", e));
             }
 
-            elVideo.play().catch(e => console.error("Video play failed:", e));
+            // Then request fullscreen
+            try {
+                if (elVideo.webkitEnterFullscreen) { /* iPhone Safari */
+                    elVideo.webkitEnterFullscreen();
+                } else if (elVideo.requestFullscreen) { /* Modern Browsers */
+                    elVideo.requestFullscreen();
+                } else if (elVideo.webkitRequestFullscreen) { /* Mac Safari */
+                    elVideo.webkitRequestFullscreen();
+                } else if (elVideo.msRequestFullscreen) { /* IE11 */
+                    elVideo.msRequestFullscreen();
+                }
+            } catch (err) {
+                console.error("Fullscreen failed:", err);
+            }
         });
 
         // Skip/Close Intro
@@ -1003,19 +1011,28 @@
 
         // On-Demand Intro
         btnOnDemandIntro.addEventListener('click', () => {
+            if (!elVideo.paused) {
+                elVideo.pause();
+            }
             elVideo.currentTime = 0;
 
-            if (elVideo.requestFullscreen) {
-                elVideo.requestFullscreen();
-            } else if (elVideo.webkitRequestFullscreen) {
-                elVideo.webkitRequestFullscreen();
-            } else if (elVideo.webkitEnterFullscreen) {
-                elVideo.webkitEnterFullscreen();
-            } else if (elVideo.msRequestFullscreen) {
-                elVideo.msRequestFullscreen();
-            }
+            // Safari requires play() to be called immediately upon user gesture
+            elVideo.play().catch(e => console.error("Initial play failed:", e));
 
-            elVideo.play().catch(e => console.error("Video play failed:", e));
+            // Then request fullscreen
+            try {
+                if (elVideo.webkitEnterFullscreen) {
+                    elVideo.webkitEnterFullscreen();
+                } else if (elVideo.requestFullscreen) {
+                    elVideo.requestFullscreen();
+                } else if (elVideo.webkitRequestFullscreen) {
+                    elVideo.webkitRequestFullscreen();
+                } else if (elVideo.msRequestFullscreen) {
+                    elVideo.msRequestFullscreen();
+                }
+            } catch (err) {
+                console.error("Fullscreen failed:", err);
+            }
         });
 
         // --- Lightbox Logic ---
