@@ -846,6 +846,16 @@
             currentDbRaters = 0;
             elAdminRow.innerHTML = "Loading rating...";
 
+            // RESET UI state interactions
+            currentRatingSelected = 0;
+            updateStarsUI();
+            btnBack.disabled = false;
+            btnSkip.disabled = false;
+            if (!isAdmin) {
+                btnSubmit.disabled = true;
+            }
+            elConfirmation.classList.remove('show');
+
             if (isAdmin) {
                 elAdminRow.classList.remove('hidden');
             } else {
@@ -980,6 +990,10 @@
                 elVideo.pause();
             }
             elVideo.currentTime = 0;
+
+            // CRITICAL: Unhide the video container otherwise Safari entirely ignores play/fullscreen
+            sApp.classList.add('hidden');
+            sIntro.classList.remove('hidden');
 
             // Safari requires play() to be called immediately upon user gesture
             elVideo.play().catch(e => console.error("Initial play failed:", e));
