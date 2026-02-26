@@ -563,7 +563,8 @@
             </div>
 
             <div class="intro-actions">
-                <button id="play-intro-btn" class="btn btn-primary">Start Rating!</button>
+                <button id="play-intro-btn" class="btn btn-primary">Preview</button>
+                <button id="start-rating-btn" class="btn btn-primary hidden">Start Rating!</button>
             </div>
         </div>
 
@@ -646,6 +647,34 @@
             </button>
             <img id="lightbox-img" src="" alt="Zoomed Brand Name">
         </div>
+
+        <!-- Preview Carousel -->
+        <div id="carousel-screen" class="hidden"
+            style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:var(--primary-bg); z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+            <button class="lightbox-close" id="close-carousel-btn">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+
+            <div
+                style="display:flex; align-items:center; justify-content:space-between; width:100%; max-width:600px; padding:0 1rem; height:70vh;">
+                <button id="carousel-prev"
+                    style="background:none; border:none; color:var(--text-dark); font-size:3rem; cursor:pointer; padding: 1rem;">&#8249;</button>
+                <img id="carousel-img" src=""
+                    style="max-width:70vw; max-height:70vh; object-fit:contain; border-radius:var(--radius-lg); box-shadow:var(--shadow-md);">
+                <button id="carousel-next"
+                    style="background:none; border:none; color:var(--text-dark); font-size:3rem; cursor:pointer; padding: 1rem;">&#8250;</button>
+            </div>
+
+            <div id="carousel-counter"
+                style="color:var(--text-dark); margin-top:2rem; font-family:var(--font-family); font-weight:600; font-size:1.2rem;">
+                0 / 0</div>
+            <p style="color:var(--text-muted); font-size:0.9rem; margin-top:0.5rem;">Preview only. Ratings will start
+                after closing.</p>
+        </div>
     </div>
 
     <script>
@@ -687,6 +716,16 @@
         const uiLoading = document.getElementById('loading-overlay');
         const uiLightbox = document.getElementById('lightbox');
         const uiLightboxImg = document.getElementById('lightbox-img');
+
+        // Carousel DOM
+        const sCarousel = document.getElementById('carousel-screen');
+        const btnCloseCarousel = document.getElementById('close-carousel-btn');
+        const btnCarouselPrev = document.getElementById('carousel-prev');
+        const btnCarouselNext = document.getElementById('carousel-next');
+        const elCarouselImg = document.getElementById('carousel-img');
+        const elCarouselCounter = document.getElementById('carousel-counter');
+        const btnStartRating = document.getElementById('start-rating-btn');
+        let previewIndex = 0;
 
         // --- Utilities ---
         function showLoading() { uiLoading.classList.remove('hidden'); }
@@ -943,9 +982,52 @@
         const elVideo = document.getElementById('intro-video');
         const btnOnDemandIntro = document.getElementById('watch-intro-demand-btn');
 
-        // Start Rating button (previously Play Intro)
+        // Preview button (previously Start Rating)
         btnPlayIntro.addEventListener('click', () => {
-            // They just want to go straight to rating from this screen now
+            previewIndex = 0;
+            updateCarouselUI();
+            sCarousel.classList.remove('hidden');
+            sCarousel.classList.add('fade-in');
+        });
+
+        // Carousel logic
+        function updateCarouselUI() {
+            if (imagesList.length === 0) return;
+            elCarouselImg.src = `/assets/${imagesList[previewIndex]}`;
+            elCarouselCounter.textContent = `${previewIndex + 1} / ${imagesList.length}`;
+
+            btnCarouselPrev.style.visibility = previewIndex > 0 ? 'visible' : 'hidden';
+            btnCarouselNext.style.visibility = previewIndex < imagesList.length - 1 ? 'visible' : 'hidden';
+        }
+
+        btnCarouselPrev.addEventListener('click', () => {
+            if (previewIndex > 0) {
+                previewIndex--;
+                updateCarouselUI();
+            }
+        });
+
+        btnCarouselNext.addEventListener('click', () => {
+            if (previewIndex < imagesList.length - 1) {
+                previewIndex++;
+                updateCarouselUI();
+            }
+        });
+
+        btnCloseCarousel.addEventListener('click', () => {
+            sCarousel.classList.remove('fade-in');
+            sCarousel.classList.add('fade-out');
+            setTimeout(() => {
+                sCarousel.classList.add('hidden');
+                sCarousel.classList.remove('fade-out');
+
+                // Swap preview button with start rating
+                btnPlayIntro.classList.add('hidden');
+                btnStartRating.classList.remove('hidden');
+            }, 300);
+        });
+
+        btnStartRating.addEventListener('click', () => {
             proceedFromIntroToApp();
         });
 
