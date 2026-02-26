@@ -2,6 +2,8 @@
 
 A mobile-first web application designed for users to quickly rate brand names based on sequential image assets. Data is stored directly to Firebase Firestore, and the list of available assets is read using a Vercel Serverless Function.
 
+**Live Deployment:** [https://brandname-psi.vercel.app/](https://brandname-psi.vercel.app/)
+
 ## Prerequisites
 - Node.js installed locally.
 - A Firebase Project (for the Firestore database).
@@ -39,12 +41,13 @@ A mobile-first web application designed for users to quickly rate brand names ba
    ```bash
    npm install
    ```
-4. Start the local server:
+4. Start the local development server:
    ```bash
-   npm start
+   npm run dev
    ```
-5. The app runs at `http://localhost:3000`. 
-6. Type exactly **`start`** to run normally, or **`admin0`** to view aggregate ratings.
+5. The local app runs at `http://localhost:3000`. 
+6. Type exactly **`start`** to run normally, or **`admin0`** to view aggregate ratings and skip controls.
+7. **Asset Management:** For detailed instructions on how to structure and name the brand images in the `assets/` folder and the intro video in `intro_video/intro.mp4`, please refer to `instructions.md`.
 
 ### 3. Deployment to Vercel
 1. Initialise git:
@@ -59,8 +62,9 @@ A mobile-first web application designed for users to quickly rate brand names ba
 5. In the **Environment Variables** section of the Vercel deployment wizard, add EVERY variable listed in your `.env` file (e.g. `FIREBASE_API_KEY`, etc.).
 6. Click Deploy.
 
-## File Structure Structure
+## File Structure
 - `index.html`: The monolithic front-end, styling, and Firebase logic.
-- `assets/`: Folder holding the `.png` files (Must start with `name___`).
-- `api/images.js`: Vercel Serverless Function to dynamically list the contents of `/assets/`.
-- `server.js`: Development server acting identically to Vercel for local testing.
+- `assets/`: Folder holding the `.png` files. Review `instructions.md` for naming conventions.
+- `intro_video/`: Folder containing `intro.mp4`. Review `instructions.md`.
+- `api/`: Vercel Serverless Functions (`images.js` and `config.js`).
+- `dev-server.js`: Development server mimicking Vercel for local testing.
