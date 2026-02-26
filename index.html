@@ -413,6 +413,47 @@
         }
 
         /* =========================================
+           Screen: Intro Video 
+        ========================================= */
+        #intro-screen {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        #intro-screen h2 {
+            font-size: 1.5rem;
+            color: var(--text-dark);
+            margin-bottom: 1rem;
+        }
+
+        #intro-video-container {
+            width: 100%;
+            max-width: 100%;
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+            margin-bottom: 1.5rem;
+            background: #000;
+        }
+
+        #intro-video {
+            width: 100%;
+            display: block;
+        }
+
+        .intro-actions {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        /* =========================================
            Screen: End 
         ========================================= */
         #end-screen {
@@ -511,6 +552,22 @@
             <button id="begin-btn" class="btn btn-primary" disabled>Begin</button>
         </div>
 
+        <!-- Screen 1.5: Intro Video -->
+        <div id="intro-screen" class="hidden">
+            <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🎬</div>
+            <h2>Let's set the stage</h2>
+
+            <div id="intro-video-container">
+                <video id="intro-video" src="/intro_video/intro.mp4" playsinline controls loop></video>
+            </div>
+
+            <div class="intro-actions">
+                <button id="play-intro-btn" class="btn btn-primary">Play Intro</button>
+                <button id="skip-intro-btn" class="btn btn-secondary hidden">Skip Intro</button>
+                <button id="close-intro-btn" class="btn btn-primary hidden">Continue to App</button>
+            </div>
+        </div>
+
         <!-- Screen 2: Main App -->
         <div id="app-screen" class="hidden">
             <div class="top-bar">
@@ -523,6 +580,15 @@
                 </button>
                 <div id="back-spacer" style="width: 70px;"></div>
                 <div class="counter" id="image-counter">0 / 0</div>
+
+                <button id="watch-intro-demand-btn"
+                    style="background:none; border:none; cursor:pointer; color:var(--text-muted); display:flex; align-items:center; gap:0.25rem;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                    </svg>
+                    <span style="font-size: 0.8rem; font-family: inherit;">Intro</span>
+                </button>
             </div>
 
             <div class="image-container">
@@ -601,6 +667,7 @@
 
         // --- DOM Elements ---
         const sLanding = document.getElementById('landing-screen');
+        const sIntro = document.getElementById('intro-screen');
         const sApp = document.getElementById('app-screen');
         const sEnd = document.getElementById('end-screen');
 
@@ -708,12 +775,17 @@
                     }
                 }
 
-                // Proceed to App flow
-                hideLoading();
-                switchScreen(sLanding, sApp);
+                // Setup Intro Screen
+                if (isAdmin) {
+                    document.getElementById('skip-intro-btn').classList.remove('hidden');
+                } else {
+                    document.getElementById('skip-intro-btn').classList.add('hidden');
+                }
+                document.getElementById('skip-intro-btn').classList.add('hidden');
 
-                // Start loading first image
-                loadItemAtCursor(0);
+                // Proceed to Intro Flow
+                hideLoading();
+                switchScreen(sLanding, sIntro);
 
             } catch (error) {
                 console.error("Failed to load images", error);
@@ -862,6 +934,82 @@
             }
 
         }
+
+        // --- Intro Video Logic ---
+        const btnPlayIntro = document.getElementById('play-intro-btn');
+        const btnSkipIntro = document.getElementById('skip-intro-btn');
+        const btnCloseIntro = document.getElementById('close-intro-btn');
+        const elVideo = document.getElementById('intro-video');
+        const btnOnDemandIntro = document.getElementById('watch-intro-demand-btn');
+
+        // Play Intro button
+        btnPlayIntro.addEventListener('click', () => {
+            btnPlayIntro.classList.add('hidden');
+            btnSkipIntro.classList.add('hidden');
+            btnCloseIntro.classList.remove('hidden');
+
+            if (elVideo.requestFullscreen) {
+                elVideo.requestFullscreen();
+            } else if (elVideo.webkitRequestFullscreen) { /* Safari */
+                elVideo.webkitRequestFullscreen();
+            } else if (elVideo.msRequestFullscreen) { /* IE11 */
+                elVideo.msRequestFullscreen();
+            }
+
+            elVideo.play();
+        });
+
+        // Skip/Close Intro
+        const proceedFromIntroToApp = () => {
+            elVideo.pause();
+            elVideo.currentTime = 0;
+            switchScreen(sIntro, sApp);
+
+            // If we are starting from the beginning, load idx 0
+            if (currentIndex === 0 && !elImage.src) {
+                loadItemAtCursor(0);
+            }
+        };
+
+        btnSkipIntro.addEventListener('click', proceedFromIntroToApp);
+        btnCloseIntro.addEventListener('click', proceedFromIntroToApp);
+
+        // Listeners for when the user escapes fullscreen natively
+        document.addEventListener('fullscreenchange', handleFullscreenExit);
+        document.addEventListener('webkitfullscreenchange', handleFullscreenExit);
+        document.addEventListener('mozfullscreenchange', handleFullscreenExit);
+        document.addEventListener('MSFullscreenChange', handleFullscreenExit);
+
+        function handleFullscreenExit() {
+            if (!document.fullscreenElement && !document.webkitFullscreenElement
+                && !document.mozFullScreenElement && !document.msFullscreenElement) {
+                // Determine if we're in the intro screen or app screen
+                if (!sIntro.classList.contains('hidden')) {
+                    // Exited fullscreen while watching the primary intro flow
+                    proceedFromIntroToApp();
+                } else if (!sApp.classList.contains('hidden')) {
+                    // Exited fullscreen on demand
+                    elVideo.pause();
+                    uiLightboxImg.src = ''; // Reuse lightbox overlay for on-demand
+                    uiLightbox.classList.add('hidden');
+                }
+            }
+        }
+
+        // On-Demand Intro
+        btnOnDemandIntro.addEventListener('click', () => {
+            elVideo.currentTime = 0;
+
+            if (elVideo.requestFullscreen) {
+                elVideo.requestFullscreen();
+            } else if (elVideo.webkitRequestFullscreen) {
+                elVideo.webkitRequestFullscreen();
+            } else if (elVideo.msRequestFullscreen) {
+                elVideo.msRequestFullscreen();
+            }
+
+            elVideo.play();
+        });
 
         // --- Lightbox Logic ---
         const openLightbox = () => {
