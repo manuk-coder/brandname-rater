@@ -292,6 +292,12 @@
             border-radius: var(--radius-md);
             box-shadow: var(--shadow-md);
             background-color: white;
+            cursor: zoom-in;
+            transition: transform 0.2s ease;
+        }
+
+        #brand-image:active {
+            transform: scale(0.98);
         }
 
         #admin-rating {
@@ -408,6 +414,32 @@
             color: var(--text-muted);
             font-size: 1.1rem;
         }
+
+        /* =========================================
+           Screen: Lightbox 
+        ========================================= */
+        #lightbox {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(255, 255, 255, 0.95);
+            z-index: 100;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: zoom-out;
+            padding: 1rem;
+        }
+
+        #lightbox img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+        }
     </style>
 </head>
 
@@ -479,6 +511,11 @@
         <div id="loading-overlay" class="hidden">
             <div class="spinner"></div>
         </div>
+
+        <!-- Fullscreen Lightbox -->
+        <div id="lightbox" class="hidden">
+            <img id="lightbox-img" src="" alt="Zoomed Brand Name">
+        </div>
     </div>
 
     <script>
@@ -517,6 +554,8 @@
         const elConfirmation = document.getElementById('submit-confirmation');
 
         const uiLoading = document.getElementById('loading-overlay');
+        const uiLightbox = document.getElementById('lightbox');
+        const uiLightboxImg = document.getElementById('lightbox-img');
 
         // --- Utilities ---
         function showLoading() { uiLoading.classList.remove('hidden'); }
@@ -758,6 +797,23 @@
             }
 
         }
+
+        // --- Lightbox Logic ---
+        elImage.addEventListener('click', () => {
+            if (!elImage.src) return;
+            uiLightboxImg.src = elImage.src;
+            uiLightbox.classList.remove('hidden');
+            uiLightbox.classList.add('fade-in');
+        });
+
+        uiLightbox.addEventListener('click', () => {
+            uiLightbox.classList.remove('fade-in');
+            uiLightbox.classList.add('fade-out');
+            setTimeout(() => {
+                uiLightbox.classList.add('hidden');
+                uiLightbox.classList.remove('fade-out');
+            }, 300);
+        });
 
         // --- Star Logic ---
         stars.forEach(s => {
