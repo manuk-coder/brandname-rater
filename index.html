@@ -565,6 +565,8 @@
             <div class="intro-actions">
                 <button id="play-intro-btn" class="btn btn-primary">Preview</button>
                 <button id="start-rating-btn" class="btn btn-primary hidden">Start Rating!</button>
+                <button id="reset-ratings-btn" class="btn btn-secondary hidden"
+                    style="margin-top: 1rem; border-color: #ff4444; color: #ff4444;">Reset Ratings</button>
             </div>
         </div>
 
@@ -725,6 +727,7 @@
         const elCarouselImg = document.getElementById('carousel-img');
         const elCarouselCounter = document.getElementById('carousel-counter');
         const btnStartRating = document.getElementById('start-rating-btn');
+        const btnResetRatings = document.getElementById('reset-ratings-btn');
         let previewIndex = 0;
 
         // --- Utilities ---
@@ -811,6 +814,12 @@
                     } catch (err) {
                         console.error("Failed to sort by rating:", err);
                     }
+                }
+
+                // Admin Intro Adjustments
+                if (isAdmin) {
+                    btnStartRating.textContent = "Review Ratings";
+                    btnResetRatings.classList.remove('hidden');
                 }
 
                 // Proceed to Intro Flow
@@ -1029,6 +1038,42 @@
 
         btnStartRating.addEventListener('click', () => {
             proceedFromIntroToApp();
+        });
+
+        // Reset Ratings Logic
+        btnResetRatings.addEventListener('click', async () => {
+            const confirmReset = prompt("Are you sure you want to reset all the ratings? Type YES to confirm");
+            if (confirmReset !== "YES") return;
+
+            btnResetRatings.disabled = true;
+            btnResetRatings.textContent = "Resetting...";
+
+            if (window.db && window.firebaseModules) {
+                try {
+                    const { collection, getDocs, setDoc, doc } = window.firebaseModules;
+                    const querySnapshot = await getDocs(collection(window.db, "name_ratings"));
+
+                    const updatePromises = [];
+                    querySnapshot.forEach((docSnap) => {
+                        const docRef = doc(window.db, "name_ratings", docSnap.id);
+                        updatePromises.push(setDoc(docRef, {
+                            rating_aggregate: 0,
+                            raters_number: 0
+                        }, { merge: true }));
+                    });
+
+                    await Promise.all(updatePromises);
+                    alert("All ratings have been successfully reset to 0.");
+                } catch (err) {
+                    console.error("Failed to reset ratings:", err);
+                    alert("Error resetting ratings.");
+                }
+            } else {
+                alert("Database connection not ready.");
+            }
+
+            btnResetRatings.textContent = "Reset Ratings";
+            btnResetRatings.disabled = false;
         });
 
         const proceedFromIntroToApp = () => {
