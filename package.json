@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Mobile-first brand rating web app",
   "scripts": {
-    "dev": "node server.js"
+    "dev": "node dev-server.js"
   },
   "dependencies": {
     "dotenv": "^16.4.5",
