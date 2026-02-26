@@ -49,7 +49,15 @@ A mobile-first web application designed for users to quickly rate brand names ba
 6. Type exactly **`start`** to run normally, or **`admin0`** to view aggregate ratings and skip controls.
 7. **Asset Management:** For detailed instructions on how to structure and name the brand images in the `assets/` folder and the intro video in `intro_video/intro.mp4`, please refer to `instructions.md`.
 
-### 3. Deployment to Vercel
+### 4. Administrator Tools
+The app contains a hidden administrator interface for maintaining the review integrity.
+1. When opening the app, type exactly **`admin0`** into the initial input box and click Begin.
+2. The user interface will adapt to Admin Mode:
+   - The images will be automatically sorted by the highest rated downwards.
+   - The "Start Rating" button becomes **"Review Ratings"**, skipping the input step and jumping straight to displaying the current aggregate averages out of 5 stars with a fractional calculation.
+   - A **"Reset Ratings"** button will appear. Clicking this and confirming with `YES` will write a destructive wipe to the database, setting all known `name_ratings` documents back to 0.
+
+### 5. Deployment to Vercel
 1. Initialise git:
    ```bash
    git init
