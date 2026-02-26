@@ -806,11 +806,13 @@
             }
 
             if (currentIndex === 0) {
-                btnBack.classList.add('hidden');
-                backSpacer.classList.remove('hidden');
+                btnBack.style.visibility = 'hidden';
+                backSpacer.style.display = 'block';
             } else {
+                btnBack.style.visibility = 'visible';
+                btnBack.style.display = 'flex';
                 btnBack.classList.remove('hidden');
-                backSpacer.classList.add('hidden');
+                backSpacer.style.display = 'none';
             }
 
             uiTotalCounter.textContent = `${currentIndex + 1} / ${imagesList.length}`;
@@ -982,14 +984,14 @@
             // Safari requires play() to be called immediately upon user gesture
             elVideo.play().catch(e => console.error("Initial play failed:", e));
 
-            // Then request fullscreen
+            // Then request fullscreen explicitly on the video element
             try {
                 if (elVideo.webkitEnterFullscreen) {
-                    elVideo.webkitEnterFullscreen();
+                    elVideo.webkitEnterFullscreen(); // iOS strictly maps this to the video element
                 } else if (elVideo.requestFullscreen) {
                     elVideo.requestFullscreen();
                 } else if (elVideo.webkitRequestFullscreen) {
-                    elVideo.webkitRequestFullscreen();
+                    elVideo.webkitRequestFullscreen(); // macOS Safari specific
                 } else if (elVideo.msRequestFullscreen) {
                     elVideo.msRequestFullscreen();
                 }
