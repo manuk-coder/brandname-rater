@@ -298,9 +298,12 @@
             justify-content: center;
             color: var(--text-dark);
             box-shadow: var(--shadow-sm);
-            pointer-events: none;
-            /* Let clicks pass through to image */
-            transition: opacity 0.2s;
+            cursor: zoom-in;
+            transition: opacity 0.2s, transform 0.2s;
+        }
+
+        .magnifier-icon:active {
+            transform: scale(0.95);
         }
 
         #brand-image {
@@ -861,12 +864,20 @@
         }
 
         // --- Lightbox Logic ---
-        elImage.addEventListener('click', () => {
+        const openLightbox = () => {
             if (!elImage.src) return;
             uiLightboxImg.src = elImage.src;
             uiLightbox.classList.remove('hidden');
             uiLightbox.classList.add('fade-in');
-        });
+        };
+
+        elImage.addEventListener('click', openLightbox);
+
+        // Ensure the magnifier icon also triggers it
+        const magnifierIcon = document.querySelector('.magnifier-icon');
+        if (magnifierIcon) {
+            magnifierIcon.addEventListener('click', openLightbox);
+        }
 
         uiLightbox.addEventListener('click', () => {
             uiLightbox.classList.remove('fade-in');
