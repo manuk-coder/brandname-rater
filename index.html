@@ -694,6 +694,13 @@
         // Database State
         let currentDbAggregate = 0;
         let currentDbRaters = 0;
+        let userIpAddress = "unknown";
+
+        // Fetch IP On Load
+        fetch('https://api.ipify.org?format=json')
+            .then(res => res.json())
+            .then(data => userIpAddress = data.ip)
+            .catch(err => console.warn("Could not fetch IP", err));
 
         // --- DOM Elements ---
         const sLanding = document.getElementById('landing-screen');
@@ -1050,11 +1057,12 @@
 
             if (window.db && window.firebaseModules) {
                 try {
-                    const { collection, getDocs, setDoc, doc } = window.firebaseModules;
-                    const querySnapshot = await getDocs(collection(window.db, "name_ratings"));
+                    const { collection, getDocs, setDoc, deleteDoc, doc } = window.firebaseModules;
 
+                    // 1. Reset name_ratings aggregates to 0
+                    const nameRatingsSnap = await getDocs(collection(window.db, "name_ratings"));
                     const updatePromises = [];
-                    querySnapshot.forEach((docSnap) => {
+                    nameRatingsSnap.forEach((docSnap) => {
                         const docRef = doc(window.db, "name_ratings", docSnap.id);
                         updatePromises.push(setDoc(docRef, {
                             rating_aggregate: 0,
@@ -1062,8 +1070,15 @@
                         }, { merge: true }));
                     });
 
+                    // 2. Delete all records in ratings_log
+                    const logSnap = await getDocs(collection(window.db, "ratings_log"));
+                    logSnap.forEach((docSnap) => {
+                        const docRef = doc(window.db, "ratings_log", docSnap.id);
+                        updatePromises.push(deleteDoc(docRef));
+                    });
+
                     await Promise.all(updatePromises);
-                    alert("All ratings have been successfully reset to 0.");
+                    alert("All ratings have been successfully reset to 0 and logs cleared.");
                 } catch (err) {
                     console.error("Failed to reset ratings:", err);
                     alert("Error resetting ratings.");
@@ -1220,18 +1235,30 @@
             // Save to Firebase
             if (window.db && window.firebaseModules) {
                 try {
-                    const { doc, setDoc } = window.firebaseModules;
-                    const docRef = doc(window.db, "name_ratings", nameId);
+                    const { doc, setDoc, addDoc, collection } = window.firebaseModules;
 
-                    // Write back. Merge ensures we don't overwrite unexpected future fields
-                    await setDoc(docRef, {
+                    // 1. Update Aggregate Table
+                    const docRef = doc(window.db, "name_ratings", nameId);
+                    const updateAggPromise = setDoc(docRef, {
                         name_id: nameId,
                         rating_aggregate: newAgg,
                         raters_number: newRaters
                     }, { merge: true });
 
-                    // Update our local state so going "Back" reflects recent change if needed
-                    // Note: The prompt doesn't explicitly require reflecting changes immediately if going back
+                    // 2. Log Individual Rating
+                    // Format timestamp as EST strictly based on user requirement
+                    const now = new Date();
+                    const estTimestamp = now.toLocaleString("en-US", { timeZone: "America/New_York", timeZoneName: "short" });
+
+                    const logPromise = addDoc(collection(window.db, "ratings_log"), {
+                        name_id: nameId,
+                        rating: currentRatingSelected,
+                        timestamp: estTimestamp,
+                        epoch: now.getTime(),
+                        ip: userIpAddress
+                    });
+
+                    await Promise.all([updateAggPromise, logPromise]);
 
                 } catch (error) {
                     console.error("Error writing to Firestore:", error);
